@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "file-picker"
+version = "0.1.0"
+description = "Browse files in a terminal UI, mark them, and emit a Markdown bundle of their contents."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Mate Timar", email = "timarmatealpine@gmail.com" },
+]
+keywords = ["cli", "curses", "tui", "files", "markdown", "llm", "context"]
+classifiers = [
+    "Environment :: Console :: Curses",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Topic :: Utilities",
+]
+# No third-party dependencies: this tool is pure standard library (curses, os, sys).
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/mtannerman/file-picker"
+Repository = "https://github.com/mtannerman/file-picker"
+Issues = "https://github.com/mtannerman/file-picker/issues"
+
+[project.scripts]
+filepicker = "filepicker.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/filepicker"]
