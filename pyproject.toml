@@ -30,7 +30,7 @@ Repository = "https://github.com/mtannerman/file-picker"
 Issues = "https://github.com/mtannerman/file-picker/issues"
 
 [project.scripts]
-filepicker = "filepicker.cli:main"
+file_picker = "filepicker.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/filepicker"]

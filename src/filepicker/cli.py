@@ -500,7 +500,7 @@ def generate_markdown(selected_files, reference_files, excluded_files):
 def main(argv=None):
     """Console-script entry point."""
     parser = argparse.ArgumentParser(
-        prog="filepicker",
+        prog="file_picker",
         description="Browse files in a terminal UI, mark them, and print a "
                     "Markdown bundle of their contents to stdout.")
     parser.add_argument(

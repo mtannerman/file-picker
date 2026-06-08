@@ -34,17 +34,17 @@ uv tool install .
 Run it inside the directory you want to browse:
 
 ```bash
-filepicker            # opens the picker; on "Generate & Quit" it prints Markdown
-filepicker --previous # reprint the last selection without opening the UI
-filepicker --help
+file_picker            # opens the picker; on "Generate & Quit" it prints Markdown
+file_picker --previous # reprint the last selection without opening the UI
+file_picker --help
 ```
 
 Output goes to stdout, so you can pipe or redirect it:
 
 ```bash
-filepicker > context.md
-filepicker | pbcopy          # macOS: copy to clipboard
-filepicker | xclip -sel clip # Linux/X11
+file_picker > context.md
+file_picker | pbcopy          # macOS: copy to clipboard
+file_picker | xclip -sel clip # Linux/X11
 ```
 
 ### Keys
@@ -62,13 +62,13 @@ filepicker | xclip -sel clip # Linux/X11
 | `q`            | Quit without generating                 |
 
 When you generate, the selection is saved to `.file_picker_last` in the
-directory you launched from, so `filepicker --previous` can replay it.
+directory you launched from, so `file_picker --previous` can replay it.
 
 ## Development
 
 ```bash
 uv sync
-uv run filepicker --version
+uv run file_picker --version
 ```
 
 You can also run it without installing: `uv run python -m filepicker`.
