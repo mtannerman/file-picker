@@ -75,6 +75,7 @@ filepicker | xclip -sel clip # Linux/X11
 | `Space`        | Toggle **full** (include contents)      |
 | `f` / `r`      | Toggle **reference** (path only)        |
 | `p`            | Peek at a file or folder listing        |
+| `h`            | Show the key help                       |
 | `g`            | Generate Markdown and quit              |
 | `q`            | Quit without generating                 |
 

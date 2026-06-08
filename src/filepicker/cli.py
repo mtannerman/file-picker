@@ -180,7 +180,7 @@ def draw_menu(stdscr, current_row, current_path, dirs, files,
             safe_addstr(stdscr, idx + 1, 0, display_name)
 
     instructions = ("↑/↓: Nav | →/Enter: Open | ←: Back | Space: Full | "
-                    "f/r: Ref | p: Peek | g: Generate & Quit | q: Quit")
+                    "f/r: Ref | p: Peek | h: Help | g: Generate & Quit | q: Quit")
     safe_addstr(stdscr, h - 1, 0, instructions, curses.A_REVERSE)
 
     stdscr.refresh()
@@ -225,6 +225,24 @@ def run_pager(stdscr, title, lines):
             top = 0
         elif key == curses.KEY_END:
             top = max_top
+
+
+HELP_LINES = [
+    "file-picker keys",
+    "",
+    "  ↑ / ↓          Move cursor",
+    "  → / Enter      Open folder",
+    "  ←              Go to parent folder",
+    "  Space          Toggle FULL  (include file/folder contents)",
+    "  f / r          Toggle REFERENCE  (list path only)",
+    "  p              Peek at a file or folder listing",
+    "  h              Show this help",
+    "  g              Generate Markdown and quit",
+    "  q              Quit without generating",
+    "",
+    "Folder marks are inherited by everything inside them; marking an",
+    "individual file underneath overrides the inherited state.",
+]
 
 
 def build_peek_lines(path):
@@ -344,6 +362,8 @@ def _picker_loop(stdscr):
                 if os.path.exists(full_path):
                     title, lines = build_peek_lines(full_path)
                     run_pager(stdscr, title, lines)
+        elif key == ord('h'):
+            run_pager(stdscr, "Help", HELP_LINES)
         elif key == ord('q'):
             return None
         elif key == ord('g'):
