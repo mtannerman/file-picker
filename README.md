@@ -12,17 +12,10 @@ Pure Python standard library — **no dependencies**. Works on Linux and macOS.
 
 ## Install
 
-The recommended way to install a command-line tool is with
-[`pipx`](https://pipx.pypa.io/) (or [`uv`](https://docs.astral.sh/uv/)), which
-puts it in its own isolated environment and on your `PATH`.
+Install with [`uv`](https://docs.astral.sh/uv/), which puts the tool in its own
+isolated environment and on your `PATH`.
 
-### From GitHub (once you've pushed it)
-
-```bash
-pipx install git+https://github.com/mtannerman/file-picker.git
-```
-
-or with uv:
+### From GitHub
 
 ```bash
 uv tool install git+https://github.com/mtannerman/file-picker.git
@@ -33,19 +26,8 @@ uv tool install git+https://github.com/mtannerman/file-picker.git
 ```bash
 git clone https://github.com/mtannerman/file-picker.git
 cd file-picker
-pipx install .          # or: uv tool install .
+uv tool install .
 ```
-
-### Getting pipx
-
-- **Ubuntu / Debian:** `sudo apt install pipx && pipx ensurepath`
-- **macOS (Homebrew):** `brew install pipx && pipx ensurepath`
-
-Open a new shell afterwards so the updated `PATH` takes effect.
-
-> Plain `pip install .` also works, but on recent Ubuntu and Homebrew Python
-> it will refuse with an "externally managed environment" error unless you use
-> a virtual environment. `pipx`/`uv` avoid that entirely.
 
 ## Usage
 
@@ -85,12 +67,11 @@ directory you launched from, so `filepicker --previous` can replay it.
 ## Development
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e .
-filepicker --version
+uv sync
+uv run filepicker --version
 ```
 
-You can also run it without installing: `python -m filepicker`.
+You can also run it without installing: `uv run python -m filepicker`.
 
 ## License
 
