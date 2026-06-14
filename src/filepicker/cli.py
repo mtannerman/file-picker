@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Interactive curses file picker that emits a Markdown bundle of selected files."""
 import argparse
+import base64
 import curses
 import os
 import sys
@@ -14,6 +15,43 @@ LAST_SELECTION_FILENAME = ".file_picker_last"
 _BINARY_SNIFF_BYTES = 8192
 # Cap on how many entries a folder peek will list, to stay responsive.
 _PEEK_LISTING_CAP = 2000
+# Many terminals cap the payload of an OSC 52 clipboard write. xterm's default
+# limit is 100000 bytes of *encoded* base64; warn past the safe decoded size.
+_OSC52_SAFE_BYTES = 74994
+
+
+def copy_to_clipboard_osc52(text):
+    """Copy text to the local clipboard via the OSC 52 terminal escape sequence.
+
+    This works over SSH and tunnels: the escape sequence rides the terminal
+    stream back to the local terminal emulator, which writes to the system
+    clipboard. Nothing extra is needed on the remote machine.
+
+    The sequence is written to the controlling terminal (/dev/tty) so that the
+    Markdown bundle on stdout can still be piped or redirected. Returns True if
+    the sequence was written somewhere the terminal can see it.
+    """
+    b64 = base64.b64encode(text.encode('utf-8')).decode('ascii')
+    seq = f"\033]52;c;{b64}\a"
+
+    # Inside tmux the sequence must be wrapped for passthrough to reach the
+    # outer terminal (each ESC is doubled within the DCS passthrough).
+    if os.environ.get('TMUX'):
+        seq = "\033Ptmux;" + seq.replace("\033", "\033\033") + "\033\\"
+
+    try:
+        with open('/dev/tty', 'w') as tty:
+            tty.write(seq)
+            tty.flush()
+        return True
+    except OSError:
+        # Fall back to stderr, which is usually still the terminal.
+        try:
+            sys.stderr.write(seq)
+            sys.stderr.flush()
+            return True
+        except OSError:
+            return False
 
 
 def safe_addstr(stdscr, y, x, text, attr=0):
@@ -445,12 +483,16 @@ def expand_to_files(paths):
     return result
 
 
-def generate_markdown(selected_files, reference_files, excluded_files):
+def generate_markdown(selected_files, reference_files, excluded_files,
+                      clipboard=False):
     """Reads files and formats them into markdown.
 
     Every file that resolves to an effective 'full' mark (directly or via a
     marked folder, minus any exclusions) gets its contents in a code block.
     Files resolving to 'reference' get a name-only placeholder line.
+
+    By default the bundle is printed to stdout. When ``clipboard`` is set, it is
+    instead sent to the local clipboard via OSC 52 (useful over SSH/tunnels).
     """
     if not selected_files and not reference_files:
         print("No files were selected.", file=sys.stderr)
@@ -494,7 +536,24 @@ def generate_markdown(selected_files, reference_files, excluded_files):
         except Exception as e:
             print(f"Error reading file {file_path}: {e}", file=sys.stderr)
 
-    print("\n\n".join(output_parts))
+    output = "\n\n".join(output_parts)
+
+    if not clipboard:
+        print(output)
+        return
+
+    nbytes = len(output.encode('utf-8'))
+    if copy_to_clipboard_osc52(output):
+        print(f"Copied {len(classified)} file(s) ({human_size(nbytes)}) to the "
+              "clipboard via OSC 52.", file=sys.stderr)
+        if nbytes > _OSC52_SAFE_BYTES:
+            print("Warning: output is large; some terminals cap OSC 52 "
+                  f"clipboard writes (~{human_size(_OSC52_SAFE_BYTES)}) and may "
+                  "truncate or ignore it.", file=sys.stderr)
+    else:
+        print("Could not reach a terminal to send the OSC 52 sequence; "
+              "printing to stdout instead.", file=sys.stderr)
+        print(output)
 
 
 def main(argv=None):
@@ -508,6 +567,11 @@ def main(argv=None):
         help="Skip the UI and regenerate output from the last saved selection "
              f"({LAST_SELECTION_FILENAME}) in the current directory.")
     parser.add_argument(
+        "-c", "--clipboard", action="store_true",
+        help="Copy the Markdown bundle to your local clipboard via OSC 52 "
+             "instead of printing it. Works over SSH/tunnels, provided your "
+             "local terminal has clipboard writes enabled.")
+    parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args(argv)
 
@@ -516,7 +580,8 @@ def main(argv=None):
         result = load_last_selection()
         if result:
             selected_files, reference_files, excluded_files = result
-            generate_markdown(selected_files, reference_files, excluded_files)
+            generate_markdown(selected_files, reference_files, excluded_files,
+                              clipboard=args.clipboard)
         return 0
 
     try:
@@ -524,7 +589,8 @@ def main(argv=None):
         if result and (result[0] or result[1]):
             selected_files, reference_files, excluded_files = result
             save_last_selection(selected_files, reference_files, excluded_files)
-            generate_markdown(selected_files, reference_files, excluded_files)
+            generate_markdown(selected_files, reference_files, excluded_files,
+                              clipboard=args.clipboard)
     except curses.error as e:
         print(f"Curses error: {e}", file=sys.stderr)
         print("Your terminal might not support curses.", file=sys.stderr)
