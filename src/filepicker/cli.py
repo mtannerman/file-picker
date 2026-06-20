@@ -192,9 +192,20 @@ def draw_menu(stdscr, current_row, current_path, dirs, files,
 
     combined_list = [f"../"] + [f"{d}/" for d in dirs] + files
 
-    for idx, item_name in enumerate(combined_list):
-        if idx >= h - 2:
+    # Scrolling viewport: rows 1..h-2 are for entries (row 0 is the header,
+    # row h-1 is the instructions bar). Keep current_row visible by scrolling.
+    body_height = max(1, h - 2)
+    if current_row < 0:
+        current_row = 0
+    top = 0
+    if current_row >= body_height:
+        top = current_row - body_height + 1
+
+    for offset in range(body_height):
+        idx = top + offset
+        if idx >= len(combined_list):
             break
+        item_name = combined_list[idx]
 
         if item_name == "../":
             # Navigation entry: not markable, blank gutter for alignment.
@@ -213,9 +224,9 @@ def draw_menu(stdscr, current_row, current_path, dirs, files,
         display_name = f"{prefix}{item_name}"
 
         if idx == current_row:
-            safe_addstr(stdscr, idx + 1, 0, display_name, curses.A_REVERSE)
+            safe_addstr(stdscr, offset + 1, 0, display_name, curses.A_REVERSE)
         else:
-            safe_addstr(stdscr, idx + 1, 0, display_name)
+            safe_addstr(stdscr, offset + 1, 0, display_name)
 
     instructions = ("↑/↓: Nav | →/Enter: Open | ←: Back | Space: Full | "
                     "f/r: Ref | p: Peek | h: Help | g: Generate & Quit | q: Quit")
